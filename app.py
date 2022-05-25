@@ -2,14 +2,12 @@ from flask import Flask, redirect, render_template, request, session
 from forms.login import LoginForm
 from forms.register import RegisterForm
 from requests import get, post
-from ClientSockets import Client
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'zoomhrome'
 app.config['SESSION_TYPE'] = 'filesystem'
 base_url = "http://localhost:5000/api/v1/"
 base_sockets_url = "http://localhost:5000"
-my_po = None
 
 
 def main():
@@ -18,7 +16,6 @@ def main():
 
 @app.route('/', methods=['GET', 'POST'])
 def login():
-    global my_po
     form = LoginForm()
     if form.validate_on_submit():
         response = get(base_url + 'users',
@@ -26,9 +23,6 @@ def login():
                                "password": form.password.data}).json()
         if 'success' in response:
             session['id'] = response['success']['id']
-            my_po = Client(base_sockets_url)
-            my_po.my_connect()
-            my_po.emit('add_sid', {'data': str(session['id'])})
             print('FFFFFF', session['id'])
             return redirect(f'/main/{session["id"]}')
         return render_template('login.html',
