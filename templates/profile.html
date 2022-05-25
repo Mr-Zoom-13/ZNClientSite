@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Profile {{ user["id"] }}</h1>
+{% if owner %}
+    <h2 id="last_seen">online</h2>
+{% else %}
+    <h2 id="last_seen">{{ user["last_seen"] }}</h2>
+{% endif %}
+{% endblock %}
