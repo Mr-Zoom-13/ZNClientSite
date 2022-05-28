@@ -1,8 +1,7 @@
 $(document).ready(function() {
     var socket = io('http://localhost:5000/');
-
     socket.on('connect', function () {
-        socket.emit('add_sid', {data: window.location.href});
+        socket.emit('add_sid', {data: id_real});
     })
     socket.on('user_update', function (data) {
         console.log("ZASHEL");
@@ -13,6 +12,6 @@ $(document).ready(function() {
     })
 
     window.onbeforeunload = function () {
-            socket.emit('delete_sid', {data: window.location.href});
+            socket.emit('delete_sid', {data: id_real});
         }
 })

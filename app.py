@@ -75,10 +75,7 @@ def profile(id):
     if request.method == 'POST':
         if 'my_prof' in request.form:
             return redirect(f'/main/{session["id"]}')
-    print(session['id'])
-    if user['id'] == session['id']:
-        return render_template('profile.html', user=user, owner=True)
-    return render_template('profile.html', user=user, owner=False)
+    return render_template('profile.html', user=user, id_real=session['id'])
 
 
 if __name__ == '__main__':
