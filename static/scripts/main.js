@@ -14,4 +14,16 @@ $(document).ready(function() {
     window.onbeforeunload = function () {
             socket.emit('delete_sid', {data: id_real});
         }
+
+    window.onload = function () {
+
+    //получаем идентификатор элемента
+        var a = document.getElementById('submit');
+
+    //вешаем на него событие
+        a.onclick = function() {
+            console.log("!!!!!!!!!")
+            return false;
+        }
+    }
 })

@@ -69,13 +69,22 @@ def register():
     return render_template('register.html', form=form)
 
 
-@app.route('/main/<int:id>', methods=['GET', 'POST'])
-def profile(id):
-    user = get(base_url + 'users/' + str(id)).json()['user']
-    if request.method == 'POST':
-        if 'my_prof' in request.form:
-            return redirect(f'/main/{session["id"]}')
-    return render_template('profile.html', user=user, id_real=session['id'])
+# @app.route('/main/<int:id>', methods=['GET', 'POST'])
+# def profile(id):
+#     user = get(base_url + 'users/' + str(id)).json()['user']
+#     if request.method == 'POST':
+#         if 'my_prof' in request.form:
+#             return redirect(f'/main/{session["id"]}')
+#     return render_template('profile.html', user=user, id_real=session['id'])
+#
+#
+# @app.route('/1')
+# def index():
+#     return render_template('verstka_main.html')
+
+@app.route('/main')
+def main():
+    return render_template('main.html')
 
 
 if __name__ == '__main__':
