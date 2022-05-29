@@ -7,8 +7,14 @@
     <link rel="stylesheet" type="text/css" href="../static/css/style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/3.0.4/socket.io.js" integrity="sha512-aMGMvNYu8Ue4G+fHa359jcPb1u+ytAF+P2SCb+PxrjCdO3n3ZTxJ30zuH39rimUggmTwmh2u7wvQsDTHESnmfQ==" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.0.13/dist/js/select2.min.js"></script>
 </head>
 <body>
+<header>
+    <h1 class="title_app">ZoomNetwork</h1>
+</header>
 <div class="parent">
     <div class="navigation">
         <a href="https://vk.com/al_im.php" class="block" id="my_profile">
@@ -21,6 +27,14 @@
         </a>
     </div>
     <div class="messenger">
+        <select class="js-select2" name="city" placeholder="Выберите город">
+            <option value=""></option>
+            <option value="367" class="icon-my">Абаза</option>
+            <option value="340">aba</option>
+            <option value="369">Абдулино</option>
+            <option value="370">Абинск</option>
+            <option value="371">Агидель</option>
+        </select>
         <ul class="ul_messenger">
             <li>
                 <div class="one_message">
@@ -61,4 +75,13 @@
 </div>
 </body>
 <script src="../static/scripts/main.js"></script>
+<script>
+$(document).ready(function() {
+	$('.js-select2').select2({
+		placeholder: "Выберите город",
+		maximumSelectionLength: 2,
+		language: "ru"
+	});
+});
+</script>
 </html>
