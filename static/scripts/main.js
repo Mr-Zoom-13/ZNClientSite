@@ -1,3 +1,22 @@
+function formatData (data) {
+  if (!data.id) { return data.text; }
+  if (data.id == "340") {
+      $result= $(
+    '<span class="block"><img src="../static/img/avatar1_ready.jpg" class="avatar_messenger"/> ' + data.text + '</span>'
+      );
+      return $result;
+  }
+    return data.text;
+
+};
+
+$(".js-select2").select2({
+  templateResult: formatData,
+  templateSelection: formatData,
+    placeholder: "Choose dialog..."
+});
+
+
 $(document).ready(function() {
     var socket = io('http://localhost:5000/');
     fetch('/api')
@@ -8,6 +27,7 @@ $(document).ready(function() {
             id_real = myjson.id;
         });
     socket.on('connect', function () {
+        messenger()
         socket.emit('add_sid', {data: id_real});
     })
     socket.on('user_update', function (data) {
@@ -32,5 +52,15 @@ $(document).ready(function() {
             console.log("!!!!!!!!!")
             return false;
         }
+    }
+    function messenger () {
+        fetch('http://localhost:5000/api/v1/dialogs')
+        .then((response) => {
+            return response.json();
+        })
+        .then((myjson) => {
+            dialogs = myjson.dialogs;
+            console.log(dialogs);
+        });
     }
 })
