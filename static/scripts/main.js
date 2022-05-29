@@ -1,5 +1,12 @@
 $(document).ready(function() {
     var socket = io('http://localhost:5000/');
+    fetch('/api')
+        .then((response) => {
+            return response.json();
+        })
+        .then((myjson) => {
+            id_real = myjson.id;
+        });
     socket.on('connect', function () {
         socket.emit('add_sid', {data: id_real});
     })
@@ -18,7 +25,7 @@ $(document).ready(function() {
     window.onload = function () {
 
     //получаем идентификатор элемента
-        var a = document.getElementById('submit');
+        var a = document.getElementById('my_profile');
 
     //вешаем на него событие
         a.onclick = function() {

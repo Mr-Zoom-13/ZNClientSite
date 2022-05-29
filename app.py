@@ -1,4 +1,4 @@
-from flask import Flask, redirect, render_template, request, session
+from flask import Flask, redirect, render_template, request, session, jsonify
 from forms.login import LoginForm
 from forms.register import RegisterForm
 from requests import get, post
@@ -24,7 +24,7 @@ def login():
         if 'success' in response:
             session['id'] = response['success']['id']
             print('FFFFFF', session['id'])
-            return redirect(f'/main/{session["id"]}')
+            return redirect('/main')
         return render_template('login.html',
                                message="Неправильный логин или пароль",
                                form=form)
@@ -65,7 +65,7 @@ def register():
                                 'password': form.password.data}).json()['success']
         session['id'] = this_user['id']
         print(session['id'])
-        return redirect(f'/main/{session["id"]}')
+        return redirect('/main')
     return render_template('register.html', form=form)
 
 
@@ -83,8 +83,14 @@ def register():
 #     return render_template('verstka_main.html')
 
 @app.route('/main')
-def main():
+def main_page():
     return render_template('main.html')
+
+
+@app.route('/api')
+def api_func():
+    data = {'id': session.get('id')}
+    return jsonify(data)
 
 
 if __name__ == '__main__':
