@@ -1,26 +1,31 @@
 function formatData (data) {
   if (!data.id) { return data.text; }
+  let result = 1
   fetch('http://localhost:5000/api/v1/dialogs')
         .then((response) => {
             return response.json();
         })
         .then((myjson) => {
             dialogs = myjson.dialogs;
-            for (let i = 0; i < dialogs.length; i++){
-                if (data.id == dialogs[i].id) {
-                    console.log("AAAAA")
-                    first_url = "<span class=\"block\"><img src=\"data:image/png;base64,"
-                    second_url = '"'
-                    third_url = `alt="avatar1" class="avatar_messenger"> `
-                    fourth_url = `</span>`
-                    window.globalVar = $(first_url + dialogs[i].avatar + second_url + third_url + data.text + fourth_url)
-                    ;
-                    return false;
-                }
-            }
-
         })
-    return window.globalVar;
+
+    for (let i = 0; i < dialogs.length; i++){
+        if (data.id == dialogs[i].id) {
+            console.log("AAAAA")
+            first_url = "<span class=\"block\"><img src=\"data:image/png;base64,"
+            second_url = '"'
+            third_url = `alt="avatar1" class="avatar_messenger"> `
+            fourth_url = `</span>`
+            result = $(first_url + dialogs[i].avatar + second_url + third_url + data.text + fourth_url)
+            ;
+        }
+    }
+    if(result === 1) {
+        return data.text;
+    }
+    else {
+        return result;
+    }
   }
 
 $(".js-select2").select2({
@@ -105,7 +110,8 @@ $(document).ready(function() {
                         <span>18:35</span>
                     </div>
                 </div>
-            </li>`;
+            </li>
+            <li><div class="delimiter"><span>-------------------------------------------------</span></div></li>`;
             }
         });
     }
