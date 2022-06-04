@@ -1,14 +1,27 @@
 function formatData (data) {
   if (!data.id) { return data.text; }
-  if (data.id == "340") {
-      $result= $(
-    '<span class="block"><img src="../static/img/avatar1_ready.jpg" class="avatar_messenger"/> ' + data.text + '</span>'
-      );
-      return $result;
-  }
-    return data.text;
+  fetch('http://localhost:5000/api/v1/dialogs')
+        .then((response) => {
+            return response.json();
+        })
+        .then((myjson) => {
+            dialogs = myjson.dialogs;
+            for (let i = 0; i < dialogs.length; i++){
+                if (data.id == dialogs[i].id) {
+                    console.log("AAAAA")
+                    first_url = "<span class=\"block\"><img src=\"data:image/png;base64,"
+                    second_url = '"'
+                    third_url = `alt="avatar1" class="avatar_messenger"> `
+                    fourth_url = `</span>`
+                    window.globalVar = $(first_url + dialogs[i].avatar + second_url + third_url + data.text + fourth_url)
+                    ;
+                    return false;
+                }
+            }
 
-};
+        })
+    return window.globalVar;
+  }
 
 $(".js-select2").select2({
   templateResult: formatData,
@@ -54,13 +67,46 @@ $(document).ready(function() {
         }
     }
     function messenger () {
+        this_select = document.getElementById('choose_dialog')
         fetch('http://localhost:5000/api/v1/dialogs')
         .then((response) => {
             return response.json();
         })
         .then((myjson) => {
             dialogs = myjson.dialogs;
-            console.log(dialogs);
+            var length = this_select.options.length;
+            for (i = length-1; i >= 0; i--) {
+                this_select.options[i] = null;
+            }
+            var opt_first = document.createElement('option');
+                opt_first.value = "";
+                opt_first.innerHTML = "";
+                this_select.appendChild(opt_first);
+            for (let i = 0; i < dialogs.length; i++){
+                console.log(i)
+                var opt = document.createElement('option');
+                opt.value = dialogs[i].id;
+                console.log(dialogs[i].id)
+                opt.innerHTML = dialogs[i].title;
+                this_select.appendChild(opt);
+                var ul = document.getElementById("ul_messenger_id");
+                ul.innerHTML += `<li>
+                <div class="one_message">
+                    <img src="data:image/png;base64,` + dialogs[i].avatar + `"` + `alt="avatar1" class="avatar_messenger">
+                    <a href="https://vk.com/al_im.php" class="block">
+                        <div class="fio">
+                            <span>` + dialogs[i].title + `</span>
+                        </div>
+                    </a>
+                    <div class="last_message">
+                        <span>Пока</span>
+                    </div>
+                    <div class="last_message_time">
+                        <span>18:35</span>
+                    </div>
+                </div>
+            </li>`;
+            }
         });
     }
 })
