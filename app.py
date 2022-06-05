@@ -27,34 +27,33 @@ def login():
             return redirect('/main')
         return render_template('login.html',
                                message="Неправильный логин или пароль",
-                               form=form)
-    return render_template('login.html', form=form)
+                               form=form, my_login=True)
+    return render_template('login.html', form=form, my_login=True)
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
-    response = get(base_url + 'users',
-                   params={"type": "check_is_exists", "email": form.email.data}).json()
-    print(response)
     if form.validate_on_submit():
+        response = get(base_url + 'users',
+                       params={"type": "check_is_exists", "email": form.email.data}).json()
         try:
             if form.password.data != form.password_again.data:
                 return render_template('register.html',
                                        form=form,
-                                       message="Пароли не совпадают")
+                                       message="Пароли не совпадают", my_login=True)
             elif int(form.age.data) <= 0:
                 return render_template('register.html',
                                        form=form,
-                                       message="Неверный возраст")
+                                       message="Неверный возраст", my_login=True)
             elif response == 'Email exists, but incorrect password':
                 return render_template('register.html',
                                        form=form,
-                                       message="Аккаунт с данной почтой уже зарегистрирован")
+                                       message="Аккаунт с данной почтой уже зарегистрирован", my_login=True)
         except ValueError:
             return render_template('register.html',
                                    form=form,
-                                   message="Неверный возраст")
+                                   message="Неверный возраст", my_login=True)
         post(base_url + 'users',
              params={'email': form.email.data, 'surname': form.surname.data,
                      'name': form.name.data, 'password': form.password.data, 'birthdate': '',
@@ -66,7 +65,7 @@ def register():
         session['id'] = this_user['id']
         print(session['id'])
         return redirect('/main')
-    return render_template('register.html', form=form)
+    return render_template('register.html', form=form, my_login=True)
 
 
 # @app.route('/main/<int:id>', methods=['GET', 'POST'])

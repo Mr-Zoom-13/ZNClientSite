@@ -61,10 +61,12 @@ p {
 }
 
 .avatar_messenger {
-    border-radius: 50%;
+    border-radius: 100%;
     display: inline-block;
-    width: 15%;
+    width: 52px;
+    height: 52px;
     margin-right: 3px;
+    object-fit: cover;
 }
 
 .fio {
