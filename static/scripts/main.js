@@ -1,3 +1,17 @@
+$(".messenger").scroll(function () {
+    console.log(localStorage.getItem('dialog'))
+    s_top = $(".messenger").scrollTop();
+    yes = $("#ul" +  localStorage.getItem('dialog')).offset().top;
+
+    if(s_top > yes - 800){
+         localStorage.setItem('dialog',  localStorage.getItem('dialog') + 5)
+        messenger()
+        console.log("Yes");
+    }
+});
+
+
+
 function formatData (data) {
   if (!data.id) { return data.text; }
   let result = 1
@@ -45,6 +59,7 @@ $(document).ready(function() {
             id_real = myjson.id;
         });
     socket.on('connect', function () {
+        localStorage.setItem('dialog', 5)
         messenger()
         socket.emit('add_sid', {data: id_real});
     })
@@ -71,7 +86,9 @@ $(document).ready(function() {
             return false;
         }
     }
-    function messenger () {
+
+})
+function messenger () {
         this_select = document.getElementById('choose_dialog')
         fetch('http://localhost:5000/api/v1/dialogs')
         .then((response) => {
@@ -87,7 +104,7 @@ $(document).ready(function() {
                 opt_first.value = "";
                 opt_first.innerHTML = "";
                 this_select.appendChild(opt_first);
-            for (let i = 0; i < dialogs.length; i++){
+            for (let i = 0; i < localStorage.getItem('dialog'); i++){
                 console.log(i)
                 var opt = document.createElement('option');
                 opt.value = dialogs[i].id;
@@ -95,7 +112,7 @@ $(document).ready(function() {
                 opt.innerHTML = dialogs[i].title;
                 this_select.appendChild(opt);
                 var ul = document.getElementById("ul_messenger_id");
-                ul.innerHTML += `<li>
+                ul.innerHTML += `<li id="ul` + dialogs[i].id + `">
                 <div class="one_message">
                     <img src="data:image/png;base64,` + dialogs[i].avatar + `"` + `alt="avatar1" class="avatar_messenger">
                     <a href="https://vk.com/al_im.php" class="block">
@@ -115,4 +132,3 @@ $(document).ready(function() {
             }
         });
     }
-})
