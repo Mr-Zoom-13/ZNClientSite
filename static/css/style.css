@@ -54,6 +54,21 @@ p {
     bottom: 0;
     left: 0;
     margin-left: 40%;
+    overflow: auto;
+}
+
+.messenger::-webkit-scrollbar {
+  width: 0;
+}
+
+.searcher_dialogs {
+    position: absolute;
+    top: 20%;
+    right: 10%;
+    bottom: 0;
+    left: 0;
+    margin-left: 40%;
+    overflow: auto;
 }
 
 .ul_messenger {
@@ -124,4 +139,11 @@ option {
 
 option:hover {
     background-color: #eee;
+}
+
+
+/*DIALOG WITH ANYONE*/
+
+.dialog {
+    top: 10%;
 }

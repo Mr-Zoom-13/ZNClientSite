@@ -92,5 +92,10 @@ def api_func():
     return jsonify(data)
 
 
+@app.route('/t')
+def t():
+    return render_template('verstka_chat.html', my_login=True)
+
+
 if __name__ == '__main__':
     main()
