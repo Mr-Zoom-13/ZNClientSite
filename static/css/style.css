@@ -147,3 +147,7 @@ option:hover {
 .dialog {
     top: 10%;
 }
+
+.gif_loading {
+    width: 50px;
+}
