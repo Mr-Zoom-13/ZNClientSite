@@ -10,10 +10,12 @@ base_url = "http://localhost:5000/api/v1/"
 base_sockets_url = "http://localhost:5000"
 
 
+# main function to run the server
 def main():
     app.run(port=5001)
 
 
+# function to login user
 @app.route('/', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -31,12 +33,14 @@ def login():
     return render_template('login.html', form=form, my_login=True)
 
 
+# function to register user
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
     if form.validate_on_submit():
         response = get(base_url + 'users',
                        params={"type": "check_is_exists", "email": form.email.data}).json()
+        # checking the correctness of the data
         try:
             if form.password.data != form.password_again.data:
                 return render_template('register.html',
@@ -54,6 +58,7 @@ def register():
             return render_template('register.html',
                                    form=form,
                                    message="Неверный возраст", my_login=True)
+        # request to the server to register the user
         post(base_url + 'users',
              params={'email': form.email.data, 'surname': form.surname.data,
                      'name': form.name.data, 'password': form.password.data, 'birthdate': '',
@@ -67,19 +72,6 @@ def register():
         return redirect('/main')
     return render_template('register.html', form=form, my_login=True)
 
-
-# @app.route('/main/<int:id>', methods=['GET', 'POST'])
-# def profile(id):
-#     user = get(base_url + 'users/' + str(id)).json()['user']
-#     if request.method == 'POST':
-#         if 'my_prof' in request.form:
-#             return redirect(f'/main/{session["id"]}')
-#     return render_template('profile.html', user=user, id_real=session['id'])
-#
-#
-# @app.route('/1')
-# def index():
-#     return render_template('verstka_main.html')
 
 @app.route('/main')
 def main_page():
