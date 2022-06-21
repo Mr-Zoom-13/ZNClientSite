@@ -42,7 +42,7 @@ p {
     right: 10%;
     bottom: 0;
     left: 0;
-    margin-left: 30%;
+    margin-left: 20%;
 }
 
 /*КОНЕЦ НАВИГАЦИИ*/
@@ -85,18 +85,18 @@ p {
 }
 
 .fio {
-    font-size: 120%;
-    font-weight: bold;
-    margin-left: 12%;
-    margin-top: -40%;
+    position: absolute;
+    top: 16%;
 }
 
 .last_message {
     margin-top: -13%;
     margin-left: 17%;
+    word-wrap: break-word;
+    width: 70%;
 }
 
-.one_message {
+.one_dialog {
     width: 40%;
     margin-top: 5%;
 }
@@ -150,4 +150,124 @@ option:hover {
 
 .gif_loading {
     width: 50px;
+}
+
+.but_back {
+    background-color: transparent;
+    color: gray;
+    border: 0;
+    font-size: 22px;
+    width: 20%;
+    text-align: left;
+}
+
+.dialog_chat {
+    top: 18%;
+    border-radius: 15px;
+    background-color: gray;
+}
+
+.message {
+    background-color: white;
+}
+
+
+
+
+
+
+
+.chat_other{
+    float: left;
+    display: block;
+    width: 50%;
+}
+
+.messages{
+    height: 80%;
+    overflow-y: scroll;
+    margin: 10px;
+}
+
+.chat_messages_2{
+    background-color: #d6edf7;
+    padding: 10px;
+    border-radius: 10px 0px;
+    width: fit-content;
+    margin: 0px 20px 5px;
+    float: right;
+    max-width: 45%;
+    display: inline-block;
+}
+
+.chat_messages p {
+    margin: 0px;
+    padding-left: 0;
+    word-wrap: break-word;
+}
+
+.chat_messages_2 p {
+    margin: 0px;
+    padding-left: 0;
+    word-wrap: break-word;
+}
+
+.chat_messages{
+    background-color: #d6edf7;
+    padding: 10px;
+    border-radius: 10px 0px;
+    width: fit-content;
+    margin: 0px 0px 5px;
+    max-width: 45%;
+    display: inline-block;
+}
+
+.clear-line{
+    background: transparent;
+    font-size: 7px;
+    height: 10px;
+    line-height: 10px;
+    clear: both;
+}
+
+.messages::-webkit-scrollbar {
+  width: 0;
+}
+
+.send_message {
+    margin-left: auto;
+    margin-right: auto;
+    display: block;
+    width: 50%;
+}
+
+.link_profile_in_chat {
+    color: deepskyblue;
+}
+.link_profile_in_chat:hover {
+    color: deepskyblue;
+}
+
+.indent {
+    margin-left: 30%;
+}
+
+.one_dialog_li {
+    margin-top: -4%;
+}
+
+.message_date_line {
+    height: 1px;
+    border: 1px solid;
+    text-align: center;
+    margin-bottom: 10px
+}
+
+.message_time {
+    margin-left: 15px;
+}
+
+.message_time_2 {
+    text-align: right;
+    padding-top: 5%;
 }
