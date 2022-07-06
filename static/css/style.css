@@ -285,3 +285,7 @@ option:hover {
 .main_messenger_class {
     height: 70%;
 }
+
+.not_read {
+    background-color: #3298c5;
+}

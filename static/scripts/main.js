@@ -37,6 +37,7 @@ function formatData(data) {
 $(document).ready(function () {
     // connect to the socket.io server
     start = null
+    unread = []
     var socket = io('http://localhost:5000/');
     // get the real id of user
     fetch('/api')
@@ -60,12 +61,17 @@ $(document).ready(function () {
         if (data.message.date != localStorage.getItem('message_last_date')) {
             parent_div.append(`<div class="message_date_line">` + data.message.date + `</div><div class="clear-line"></div>`)
         }
+        unread.push(data.message)
         if (id_real == data.message.user_id) {
-            parent_div.append(`<div class="chat_messages_2">` + data.user.name + ` ` + data.user.surname + `<p>` + data.message.text + `</p></div><div class="message_time_2">` + data.message.time + `</div><div class="clear-line"></div>`)
+            parent_div.append(`<div class="chat_messages_2 not_read" id="message` + String(data.message.id - 1) + `" data-real-msg-id="` + data.message.id + `">` + data.user.name + ` ` + data.user.surname + `<p>` + data.message.text + `</p></div><div class="message_time_2">` + data.message.time + `</div><div class="clear-line"></div>`)
         } else {
-            parent_div.append(`<div class="chat_messages">` + data.user.name + ` ` + data.user.surname + `<p>` + data.message.text + `</p></div><span class="message_time">` + data.message.time + `</span><div class="clear-line"></div>`)
+            parent_div.append(`<div class="chat_messages not_read_recipient" id="message` + String(data.message.id - 1) + `" data-real-msg-id="` + data.message.id + `">` + data.user.name + ` ` + data.user.surname + `<p>` + data.message.text + `</p></div><span class="message_time">` + data.message.time + `</span><div class="clear-line"></div>`)
         }
         parent_div.scrollTop(parent_div.prop('scrollHeight'));
+    })
+    socket.on("set_read_sender", function (data) {
+        $(`[data-real-msg-id~="` + data.message_id + `"]`).removeClass('not_read')
+        console.log("Remove class from the sender")
     })
 
     window.onbeforeunload = function () {
@@ -117,26 +123,6 @@ $(document).ready(function () {
             })
     }
 
-    // var block_show = null;
-    //
-    // function scrollTracking(){
-    //     var wt = $(window).scrollTop();
-    //     var wh = $(window).height();
-    //     var et = $('#ul8').offset().top;
-    //     var eh = $('#ul8').outerHeight();
-    //
-    //     if (wt + wh >= et && wt + wh - eh * 2 <= et + (wh - eh)){
-    //         if (block_show == null || block_show == false) {
-    //             console.log('Блок active в области видимости');
-    //         }
-    //         block_show = true;
-    //     } else {
-    //         if (block_show == null || block_show == true) {
-    //             console.log('Блок active скрыт');
-    //         }
-    //         block_show = false;
-    //     }
-    // }
 // function for updating info about dialogs
     function messenger(scrolling) {
 
@@ -190,7 +176,7 @@ $(document).ready(function () {
                     // call function to adding dialog
                     add_dialogs(localStorage.getItem('dialog'))
                 } else {
-                    if (parseInt(localStorage.getItem('dialog')) - dialogs.length < 10) {
+                    if (parseInt(localStorage.getItem('dialog')) - dialogs.length <= 10) {
                         // call function to adding dialog
                         add_dialogs(dialogs.length);
                     } else {
@@ -263,13 +249,20 @@ $(document).ready(function () {
     </div>`)
                 messages = document.getElementById('block2')
                 messages.addEventListener('scroll', () => {
-                    console.log("scrl_mes")
                     if (messages.scrollTop == 0) {
                         localStorage.setItem('message', Number(localStorage.getItem('message')) + 10)
                         fill_chat(dialog)
                         my_top = $('#message' + String(Number(localStorage.getItem('start')) - 4)).offset().top
                         messages.scrollTop = my_top
                     }
+                    unread = unread.filter(function (item, key) {
+                        if (is_shown(`[data-real-msg-id~="` + item.id + `"]`) && $(`[data-real-msg-id~="` + item.id + `"]`).hasClass('not_read_recipient')) {
+                            socket.emit("set_read", data = {'message_id': item.id})
+                            return false
+                        }
+                        return true
+                    })
+                    console.log(unread)
                 })
                 fill_chat(dialog)
                 var div = $("#block2");
@@ -301,18 +294,31 @@ $(document).ready(function () {
             start = dialog.messages.length - localStorage.getItem('message')
         }
         for (let i = dialog.messages.length - localStorage.getItem('message') + 9; i >= start; i--) {
-
             if (id_real == dialog.messages[i].user.id) {
-                parent_div.prepend(`<div class="chat_messages_2" id="message` + i + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><div class="message_time_2">` + dialog.messages[i].time + `</div><div class="clear-line"></div>`)
+                if (dialog.messages[i].was_read == 1) {
+                    parent_div.prepend(`<div class="chat_messages_2" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><div class="message_time_2">` + dialog.messages[i].time + `</div><div class="clear-line"></div>`)
+                }
+                else {
+                    unread.push(dialog.messages[i])
+                    parent_div.prepend(`<div class="chat_messages_2 not_read" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><div class="message_time_2">` + dialog.messages[i].time + `</div><div class="clear-line"></div>`)
+                }
             } else {
-                parent_div.prepend(`<div class="chat_messages" id="message` + i + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><span class="message_time">` + dialog.messages[i].time + `</span><div class="clear-line"></div>`)
+
+                if (dialog.messages[i].was_read == 1) {
+                    parent_div.prepend(`<div class="chat_messages" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><span class="message_time">` + dialog.messages[i].time + `</span><div class="clear-line"></div>`)
+
+                }
+                else {
+                    unread.push(dialog.messages[i])
+                    parent_div.prepend(`<div class="chat_messages not_read_recipient" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><span class="message_time">` + dialog.messages[i].time + `</span><div class="clear-line"></div>`)
+                }
             }
 
-                if (i - 1 >= 0) {
-                    checking = i - 1
-                }
-                if (dialog.messages[i].date != dialog.messages[checking].date) {
-                    parent_div.prepend(`<div class="message_date_line">` + dialog.messages[i].date + `</div><div class="clear-line"></div>`)
+            if (i - 1 >= 0) {
+                checking = i - 1
+            }
+            if (dialog.messages[i].date != dialog.messages[checking].date) {
+                parent_div.prepend(`<div class="message_date_line">` + dialog.messages[i].date + `</div><div class="clear-line"></div>`)
 
 
             }
@@ -329,6 +335,25 @@ $(document).ready(function () {
                 document.getElementById('message').value = ""
             }
         });
+    }
+
+    function is_shown(target) {
+        console.log(target)
+        try {
+            var wt = $("#block2").scrollTop();
+        var wh = $("#block2").height();
+        var eh = $(target).outerHeight();
+        var et = $(target).offset().top;
+
+        if (wt + wh >= et && wt + wh - eh * 2 <= et + (wh - eh)) {
+            return true;
+        } else {
+            return false;
+        }
+        }
+        catch(e) {
+
+        }
     }
 
     window.fill_chat = fill_chat;
