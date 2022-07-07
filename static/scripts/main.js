@@ -12,7 +12,17 @@ function formatData(data) {
         })
         // the main handler of request
         .then((myjson) => {
-            dialogs = myjson.dialogs;
+            dialogs = myjson.dialogs.filter(function (item, key) {
+                flag_real = false;
+                for (let i = 0; i < item.users.length; i++) {
+                    if (item.users[i].id == id_real) flag_real = true
+                }
+                if (flag_real) {
+                    return true;
+                } else {
+                    return false
+                }
+            });
         })
     // adding avatar with text for select's option
     for (let i = 0; i < dialogs.length; i++) {
@@ -52,8 +62,58 @@ $(document).ready(function () {
         messenger(false)
         socket.emit('add_sid', {data: id_real});
     })
-    socket.on('user_update', function () {
-        messenger(false)
+    socket.on('user_update', function (data) {
+        fetch('http://localhost:5000/api/v1/dialogs')
+            // return error code if is exists
+            .then((response) => {
+                return response.json();
+            })
+            // the main handler of request
+            .then((myjson) => {
+                // getting all dialogs
+                if (id_real != data.user_id) {
+                    console.log('uuuu')
+                    dialogs = myjson.dialogs.filter(function (item, key) {
+                        flag_real = false;
+                        flag_user = false;
+                        for (let i = 0; i < item.users.length; i++) {
+                            if (item.users[i].id == id_real) flag_real = true
+                            if (item.users[i].id == data.user_id) flag_user = true
+                        }
+                        if (flag_real && flag_user) {
+                            return true;
+                        } else {
+                            return false
+                        }
+                    });
+                    console.log(data)
+                    current_viewing = Number(localStorage.getItem('dialog'))
+                    if (current_viewing > dialogs.length) current_viewing = dialogs.length
+                    for (let i = 0; i < current_viewing; i++) {
+                        dialog_set_profile = $("#set_profile" + String(dialogs[i].id))
+                        if (data.online) {
+                            console.log('onliiiine')
+                            members_online = Number(dialog_set_profile.attr("data-members-online")) + 1
+                        }
+                        else {
+                            console.log("offliiiine")
+                            members_online = Number(dialog_set_profile.attr("data-members-online")) - 1
+                        }
+                        dialog_set_profile.attr("data-members-online", String(members_online))
+                        dialog_set_profile.empty()
+                        is_online = ` `
+                        if (dialogs[i].users.length == 2 && members_online == 1) {
+                            is_online = `<p class="online_circle"></p>`
+                        } else {
+                            if (members_online != 0) {
+                                is_online = `<p class="online_circle"></p><p class="online_title">` + String(members_online) + `/` + String(dialogs[i].users.length - 1) + `</p>`
+                            }
+                        }
+                        dialog_set_profile.prepend(`<span class="fio_dialog">` + dialogs[i].title + `</span>`)
+                        dialog_set_profile.prepend(is_online)
+                    }
+                }
+            })
     })
     socket.on('new_message', function (data) {
         console.log(data)
@@ -113,7 +173,17 @@ $(document).ready(function () {
             })
             // the main handler of request
             .then((myjson) => {
-                dialogs = myjson.dialogs;
+                dialogs = myjson.dialogs.filter(function (item, key) {
+                    flag_real = false;
+                    for (let i = 0; i < item.users.length; i++) {
+                        if (item.users[i].id == id_real) flag_real = true
+                    }
+                    if (flag_real) {
+                        return true;
+                    } else {
+                        return false
+                    }
+                });
                 for (let i = 0; i < dialogs.length; i++) {
                     var opt = document.createElement('option');
                     opt.value = dialogs[i].id;
@@ -170,7 +240,17 @@ $(document).ready(function () {
             // the main handler of request
             .then((myjson) => {
                 // getting all dialogs
-                dialogs = myjson.dialogs;
+                dialogs = myjson.dialogs.filter(function (item, key) {
+                    flag_real = false;
+                    for (let i = 0; i < item.users.length; i++) {
+                        if (item.users[i].id == id_real) flag_real = true
+                    }
+                    if (flag_real) {
+                        return true;
+                    } else {
+                        return false
+                    }
+                });
                 // checking the correctness condition of the local storage
                 if (parseInt(localStorage.getItem('dialog')) < dialogs.length) {
                     // call function to adding dialog
@@ -194,14 +274,20 @@ $(document).ready(function () {
         for (let i = localStorage.getItem('dialog') - 10; i < end_count; i++) {
             var ul = document.getElementById("ul_messenger_id");
             is_online = ` `
-            if (dialogs[i].users.length == 2) {
-                for (let j = 0; j < dialogs[i].users.length; j++) {
-                    if (dialogs[i].users[j].id != id_real && dialogs[i].users[j].last_seen == "online") {
-                        is_online = `<p class="online_circle"></p>`
-                    }
+            members_online = 0
+            for (let j = 0; j < dialogs[i].users.length; j++) {
+                if (dialogs[i].users[j].id != id_real && dialogs[i].users[j].last_seen == "online") {
+                    members_online += 1;
                 }
             }
-            ul.innerHTML += `<div onclick="set_profile()">` + is_online + `<span class="fio_dialog">` + dialogs[i].title + `</span></div><li class="one_dialog_li" data-dialog-id="` + dialogs[i].id + `" id="ul` + dialogs[i].id + `" onclick="set_chat(this)" >
+            if (dialogs[i].users.length == 2 && members_online == 1) {
+                is_online = `<p class="online_circle"></p>`
+            } else {
+                if (members_online != 0) {
+                    is_online = `<p class="online_circle"></p><p class="online_title">` + String(members_online) + `/` + String(dialogs[i].users.length - 1) + `</p>`
+                }
+            }
+            ul.innerHTML += `<div onclick="set_profile()" id="set_profile` + dialogs[i].id + `" data-members-online="` + members_online + `">` + is_online + `<span class="fio_dialog">` + dialogs[i].title + `</span></div><li class="one_dialog_li" data-dialog-id="` + dialogs[i].id + `" id="ul` + dialogs[i].id + `" onclick="set_chat(this)" >
         <div class="one_dialog" data-dialog-id="` + dialogs[i].id + `">
             <img src="data:image/png;base64,` + dialogs[i].avatar + `"` + `alt="avatar1" class="avatar_messenger">
 
@@ -297,8 +383,7 @@ $(document).ready(function () {
             if (id_real == dialog.messages[i].user.id) {
                 if (dialog.messages[i].was_read == 1) {
                     parent_div.prepend(`<div class="chat_messages_2" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><div class="message_time_2">` + dialog.messages[i].time + `</div><div class="clear-line"></div>`)
-                }
-                else {
+                } else {
                     unread.push(dialog.messages[i])
                     parent_div.prepend(`<div class="chat_messages_2 not_read" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><div class="message_time_2">` + dialog.messages[i].time + `</div><div class="clear-line"></div>`)
                 }
@@ -307,8 +392,7 @@ $(document).ready(function () {
                 if (dialog.messages[i].was_read == 1) {
                     parent_div.prepend(`<div class="chat_messages" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><span class="message_time">` + dialog.messages[i].time + `</span><div class="clear-line"></div>`)
 
-                }
-                else {
+                } else {
                     unread.push(dialog.messages[i])
                     parent_div.prepend(`<div class="chat_messages not_read_recipient" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><span class="message_time">` + dialog.messages[i].time + `</span><div class="clear-line"></div>`)
                 }
@@ -341,17 +425,16 @@ $(document).ready(function () {
         console.log(target)
         try {
             var wt = $("#block2").scrollTop();
-        var wh = $("#block2").height();
-        var eh = $(target).outerHeight();
-        var et = $(target).offset().top;
+            var wh = $("#block2").height();
+            var eh = $(target).outerHeight();
+            var et = $(target).offset().top;
 
-        if (wt + wh >= et && wt + wh - eh * 2 <= et + (wh - eh)) {
-            return true;
-        } else {
-            return false;
-        }
-        }
-        catch(e) {
+            if (wt + wh >= et && wt + wh - eh * 2 <= et + (wh - eh)) {
+                return true;
+            } else {
+                return false;
+            }
+        } catch (e) {
 
         }
     }

@@ -276,6 +276,7 @@ option:hover {
     display: inline-block;
     padding-left: 0;
     margin: 0;
+    display: inline-block;
 }
 
 .fio_dialog {
@@ -288,4 +289,11 @@ option:hover {
 
 .not_read {
     background-color: #3298c5;
+}
+
+.online_title {
+    display: inline-block;
+    padding-right: 15px;
+    color: mediumseagreen;
+    padding-left: 0;
 }
