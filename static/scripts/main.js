@@ -94,8 +94,7 @@ $(document).ready(function () {
                         if (data.online) {
                             console.log('onliiiine')
                             members_online = Number(dialog_set_profile.attr("data-members-online")) + 1
-                        }
-                        else {
+                        } else {
                             console.log("offliiiine")
                             members_online = Number(dialog_set_profile.attr("data-members-online")) - 1
                         }
@@ -133,7 +132,16 @@ $(document).ready(function () {
         $(`[data-real-msg-id~="` + data.message_id + `"]`).removeClass('not_read')
         console.log("Remove class from the sender")
     })
+    socket.on('update_typing_sender', function (data) {
+        if (data.user_id != id_real) {
+            if (data.typing.length > 0) {
+                $('.div_typing').replaceWith(`<div class="div_typing"><br />` + data.typing.join(", ") + ` typing<img class="gif_typing" src="/static/gif/loading.gif"></div>`)
+            } else {
+                $('.div_typing').replaceWith(`<div class="div_typing"></div>`)
+            }
 
+        }
+    })
     window.onbeforeunload = function () {
         socket.emit('delete_sid', {data: id_real});
     }
@@ -319,6 +327,12 @@ $(document).ready(function () {
             .then((myjson) => {
                 // getting this dialog
                 dialog = myjson.dialog;
+                console.log(dialog)
+                if (dialog.typing.length > 0) {
+                    typing = `<br /><div class="div_typing">` + dialog.typing.join(", ") + ` typing<img class="gif_typing" src="/static/gif/loading.gif"></div>`
+                } else {
+                    typing = `<div class="div_typing"></div>`
+                }
                 $('.parent').append(`<div class="messenger dialog" id="header_chat">
         <div class="d-inline-block but_back" onclick="messenger(false)"><< Back</div>
             <a href="https://vk.com/al_im.php" class="d-inline-block text-decoration-none link_profile_in_chat">
@@ -326,7 +340,7 @@ $(document).ready(function () {
                 <div class="d-inline-block">
                     <h1>` + dialog.title + `</h1>
                 </div>
-            </a>
+            </a>` + typing + `
     </div>
     <div class="messenger chat_other indent" id="chat">
                 <div class="messages" id="block2">
@@ -351,6 +365,44 @@ $(document).ready(function () {
                     console.log(unread)
                 })
                 fill_chat(dialog)
+                flag_typing = false;
+                document.getElementById('message').addEventListener('keyup', function (e) {
+                    if (!flag_typing) {
+                        flag_typing = true;
+                        console.log('start typing')
+                        socket.emit("start_typing", {
+                            "dialog_id": dialog_id,
+                            "user_id": id_real
+                        })
+                    }
+                    elm = $(this);
+                    time = (new Date()).getTime();
+                    delay = 500; /* Количество мксек. для определения окончания печати */
+
+                    elm.attr({'keyup': time});
+                    elm.off('keydown');
+                    elm.off('keypress');
+                    elm.on('keydown', function (e) {
+                        $(this).attr({'keyup': time});
+                    });
+                    elm.on('keypress', function (e) {
+                        $(this).attr({'keyup': time});
+                    });
+
+                    setTimeout(function () {
+                        oldtime = parseFloat(elm.attr('keyup'));
+                        if (oldtime <= (new Date()).getTime() - delay & oldtime > 0 & elm.attr('keyup') != '' & typeof elm.attr('keyup') !== 'undefined') {
+                            // end typing
+                            flag_typing = false;
+                            console.log('end typing')
+                            socket.emit("end_typing", {
+                                "dialog_id": dialog_id,
+                                "user_id": id_real
+                            })
+                            elm.removeAttr('keyup');
+                        }
+                    }, delay);
+                });
                 var div = $("#block2");
                 div.scrollTop(div.prop('scrollHeight'));
             })
@@ -397,7 +449,7 @@ $(document).ready(function () {
                     parent_div.prepend(`<div class="chat_messages not_read_recipient" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><span class="message_time">` + dialog.messages[i].time + `</span><div class="clear-line"></div>`)
                 }
             }
-
+            checking = 0
             if (i - 1 >= 0) {
                 checking = i - 1
             }

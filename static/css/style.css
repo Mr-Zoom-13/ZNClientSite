@@ -297,3 +297,14 @@ option:hover {
     color: mediumseagreen;
     padding-left: 0;
 }
+
+.gif_typing {
+    width: 15px;
+    padding-top: 1%;
+}
+
+.div_typing {
+    width: 80%;
+    color: gray;
+    text-align: center;
+}
