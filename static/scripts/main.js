@@ -1,3 +1,6 @@
+const SERVER_URL = 'http://localhost:5000/'
+const SERVER_API = 'api/v1/'
+
 // function for format data for searching dialog select
 function formatData(data) {
     if (!data.id) {
@@ -5,7 +8,7 @@ function formatData(data) {
     }
     let result = 1
     // sending a request to the server's API
-    fetch('http://localhost:5000/api/v1/dialogs')
+    fetch(SERVER_URL + SERVER_API + 'dialogs')
         // return error code if is exists
         .then((response) => {
             return response.json();
@@ -27,7 +30,7 @@ function formatData(data) {
     // adding avatar with text for select's option
     for (let i = 0; i < dialogs.length; i++) {
         if (data.id == dialogs[i].id) {
-            console.log("AAAAA")
+
             first_url = "<span class=\"block\"><img src=\"data:image/png;base64,"
             second_url = '"'
             third_url = `alt="avatar1" class="avatar_messenger"> `
@@ -48,7 +51,7 @@ $(document).ready(function () {
     // connect to the socket.io server
     start = null
     unread = []
-    var socket = io('http://localhost:5000/');
+    var socket = io(SERVER_URL);
     // get the real id of user
     fetch('/api')
         .then((response) => {
@@ -57,13 +60,15 @@ $(document).ready(function () {
         .then((myjson) => {
             id_real = myjson.id;
         });
+    // connect to the socket.io server
     socket.on('connect', function () {
         localStorage.setItem('dialog', 10)
         messenger(false)
         socket.emit('add_sid', {data: id_real});
     })
+    // event for connect another member in dialog
     socket.on('user_update', function (data) {
-        fetch('http://localhost:5000/api/v1/dialogs')
+        fetch(SERVER_URL + SERVER_API + 'dialogs')
             // return error code if is exists
             .then((response) => {
                 return response.json();
@@ -72,7 +77,7 @@ $(document).ready(function () {
             .then((myjson) => {
                 // getting all dialogs
                 if (id_real != data.user_id) {
-                    console.log('uuuu')
+
                     dialogs = myjson.dialogs.filter(function (item, key) {
                         flag_real = false;
                         flag_user = false;
@@ -86,16 +91,18 @@ $(document).ready(function () {
                             return false
                         }
                     });
-                    console.log(data)
+
                     current_viewing = Number(localStorage.getItem('dialog'))
+                    // checking length of dialogs and current user's viewing
                     if (current_viewing > dialogs.length) current_viewing = dialogs.length
+                    // changing status in dialogs
                     for (let i = 0; i < current_viewing; i++) {
                         dialog_set_profile = $("#set_profile" + String(dialogs[i].id))
                         if (data.online) {
-                            console.log('onliiiine')
+
                             members_online = Number(dialog_set_profile.attr("data-members-online")) + 1
                         } else {
-                            console.log("offliiiine")
+
                             members_online = Number(dialog_set_profile.attr("data-members-online")) - 1
                         }
                         dialog_set_profile.attr("data-members-online", String(members_online))
@@ -114,24 +121,50 @@ $(document).ready(function () {
                 }
             })
     })
+    // event for getting new messages
     socket.on('new_message', function (data) {
-        console.log(data)
         parent_div = $('#block2')
-        if (data.message.date != localStorage.getItem('message_last_date')) {
-            parent_div.append(`<div class="message_date_line">` + data.message.date + `</div><div class="clear-line"></div>`)
+        var div_sh = $(parent_div)[0].scrollHeight,
+            div_h = parent_div.height();
+        // checking the need for scrolling
+        if (parent_div.scrollTop() + 1 >= div_sh - div_h) {
+            flag_scrolling = true;
+        } else {
+            flag_scrolling = false;
+        }
+        // get the date of message
+        date = data.message.datetime_send.split(" ")[0].split("-")
+        date.reverse()
+        date = date.join(".")
+
+        if (date != localStorage.getItem('message_last_date')) {
+            parent_div.append(`<div class="message_date_line">` + date + `</div><div class="clear-line"></div>`)
         }
         unread.push(data.message)
         if (id_real == data.message.user_id) {
-            parent_div.append(`<div class="chat_messages_2 not_read" id="message` + String(data.message.id - 1) + `" data-real-msg-id="` + data.message.id + `">` + data.user.name + ` ` + data.user.surname + `<p>` + data.message.text + `</p></div><div class="message_time_2">` + data.message.time + `</div><div class="clear-line"></div>`)
+            parent_div.append(`<div class="chat_messages_2 not_read" id="message` + String(data.message.id - 1) + `" data-real-msg-id="` + data.message.id + `">` + data.user.name + ` ` + data.user.surname + `<p>` + data.message.text + `</p></div><div class="message_time_2">` + data.message.datetime_send.split(" ")[1].split(":").slice(0, 2).join(":") + `</div><div class="clear-line"></div>`)
         } else {
-            parent_div.append(`<div class="chat_messages not_read_recipient" id="message` + String(data.message.id - 1) + `" data-real-msg-id="` + data.message.id + `">` + data.user.name + ` ` + data.user.surname + `<p>` + data.message.text + `</p></div><span class="message_time">` + data.message.time + `</span><div class="clear-line"></div>`)
+            parent_div.append(`<div class="chat_messages not_read_recipient" id="message` + String(data.message.id - 1) + `" data-real-msg-id="` + data.message.id + `">` + data.user.name + ` ` + data.user.surname + `<p>` + data.message.text + `</p></div><span class="message_time">` + data.message.datetime_send.split(" ")[1].split(":").slice(0, 2).join(":") + `</span><div class="clear-line"></div>`)
         }
-        parent_div.scrollTop(parent_div.prop('scrollHeight'));
+        // set read messages
+        unread = unread.filter(function (item, key) {
+            if ($(`[data-real-msg-id~="` + item.id + `"]`).hasClass('not_read_recipient') && is_shown(`[data-real-msg-id~="` + item.id + `"]`)) {
+                socket.emit("set_read", data = {'message_id': item.id})
+                return false
+            }
+            return true
+        })
+        if (flag_scrolling == true) {
+            parent_div.scrollTop(parent_div.prop('scrollHeight'));
+        }
+        localStorage.setItem('message_last_date', date)
     })
+    // event reading messages
     socket.on("set_read_sender", function (data) {
         $(`[data-real-msg-id~="` + data.message_id + `"]`).removeClass('not_read')
         console.log("Remove class from the sender")
     })
+    // event for typing in dialogs
     socket.on('update_typing_sender', function (data) {
         if (data.user_id != id_real) {
             if (data.typing.length > 0) {
@@ -142,6 +175,7 @@ $(document).ready(function () {
 
         }
     })
+    // delete the sid at the socket.io server
     window.onbeforeunload = function () {
         socket.emit('delete_sid', {data: id_real});
     }
@@ -162,6 +196,10 @@ $(document).ready(function () {
             templateSelection: formatData,
             placeholder: "Choose dialog..."
         });
+        $('.js-select2').on("select2:select", function (e) {
+
+            set_chat($(this).find('option:selected'))
+        });
         this_select = document.getElementById('choose_dialog')
         var length = this_select.options.length;
         // clear select
@@ -174,7 +212,7 @@ $(document).ready(function () {
         opt_first.innerHTML = "";
         this_select.appendChild(opt_first);
         // sending a request to the server's API
-        fetch('http://localhost:5000/api/v1/dialogs')
+        fetch(SERVER_URL + SERVER_API + 'dialogs')
             // return error code if is exists
             .then((response) => {
                 return response.json();
@@ -196,6 +234,8 @@ $(document).ready(function () {
                     var opt = document.createElement('option');
                     opt.value = dialogs[i].id;
                     opt.innerHTML = dialogs[i].title;
+                    opt.setAttribute("data-dialog-id", dialogs[i].id)
+                    opt.setAttribute('onclick', "testi()")
                     this_select.appendChild(opt);
                 }
             })
@@ -225,11 +265,11 @@ $(document).ready(function () {
         const myDiv = document.querySelector('.messenger')
         // check for user's scrolling and if user scroll to the bottom call the function messenger()
         myDiv.addEventListener('scroll', () => {
-            console.log("scrl")
+
             // scrollTracking()
             if (myDiv.offsetHeight + myDiv.scrollTop >= myDiv.scrollHeight - 10) {
                 localStorage.setItem('dialog', parseInt(localStorage.getItem('dialog')) + 10)
-                console.log(localStorage.getItem('dialog'))
+
                 messenger(true)
             }
         })
@@ -240,7 +280,7 @@ $(document).ready(function () {
     <img src="../static/gif/loading.gif" alt="loading..." class="gif_loading">
     </div></li>`
         // sending a request to the server's API
-        fetch('http://localhost:5000/api/v1/dialogs')
+        fetch(SERVER_URL + SERVER_API + 'dialogs')
             // return error code if is exists
             .then((response) => {
                 return response.json();
@@ -303,7 +343,7 @@ $(document).ready(function () {
                 dialogs[i].messages[dialogs[i].messages.length - 1].text
                 + `</div>
             <div class="last_message_time">` +
-                dialogs[i].messages[dialogs[i].messages.length - 1].time
+                dialogs[i].messages[dialogs[i].messages.length - 1].datetime_send.split(" ")[1].split(":").slice(0, 2).join(":")
                 + `</div>
         </div>
         <div class="message_date_line delimiter"> </div>
@@ -311,6 +351,7 @@ $(document).ready(function () {
         }
     }
 
+// function for open the chat
     function set_chat(_this) {
         clear_place()
         localStorage.setItem('message', 10)
@@ -318,7 +359,7 @@ $(document).ready(function () {
         // emot socket io for connect to room(this dialog)
         socket.emit("join_dialog", {"dialog_id": dialog_id})
         // sending a request to the server's API
-        fetch('http://localhost:5000/api/v1/dialogs/' + String(dialog_id))
+        fetch(SERVER_URL + SERVER_API + 'dialogs/' + String(dialog_id))
             // return error code if is exists
             .then((response) => {
                 return response.json();
@@ -327,7 +368,7 @@ $(document).ready(function () {
             .then((myjson) => {
                 // getting this dialog
                 dialog = myjson.dialog;
-                console.log(dialog)
+
                 if (dialog.typing.length > 0) {
                     typing = `<br /><div class="div_typing">` + dialog.typing.join(", ") + ` typing<img class="gif_typing" src="/static/gif/loading.gif"></div>`
                 } else {
@@ -352,24 +393,29 @@ $(document).ready(function () {
                     if (messages.scrollTop == 0) {
                         localStorage.setItem('message', Number(localStorage.getItem('message')) + 10)
                         fill_chat(dialog)
-                        my_top = $('#message' + String(Number(localStorage.getItem('start')) - 4)).offset().top
-                        messages.scrollTop = my_top
+                        try {
+                            my_top = $('#message' + String(Number(localStorage.getItem('start')) - 4)).offset().top
+                            messages.scrollTop = my_top
+                        } catch (e) {
+                            messages.scrollTop = messages.scrollHeight
+                        }
                     }
+                    // set read messages
                     unread = unread.filter(function (item, key) {
-                        if (is_shown(`[data-real-msg-id~="` + item.id + `"]`) && $(`[data-real-msg-id~="` + item.id + `"]`).hasClass('not_read_recipient')) {
+                        if ($(`[data-real-msg-id~="` + item.id + `"]`).hasClass('not_read_recipient') && is_shown(`[data-real-msg-id~="` + item.id + `"]`)) {
                             socket.emit("set_read", data = {'message_id': item.id})
                             return false
                         }
                         return true
                     })
-                    console.log(unread)
                 })
                 fill_chat(dialog)
+                // typing module
                 flag_typing = false;
                 document.getElementById('message').addEventListener('keyup', function (e) {
                     if (!flag_typing) {
                         flag_typing = true;
-                        console.log('start typing')
+
                         socket.emit("start_typing", {
                             "dialog_id": dialog_id,
                             "user_id": id_real
@@ -377,7 +423,7 @@ $(document).ready(function () {
                     }
                     elm = $(this);
                     time = (new Date()).getTime();
-                    delay = 500; /* Количество мксек. для определения окончания печати */
+                    delay = 500;
 
                     elm.attr({'keyup': time});
                     elm.off('keydown');
@@ -394,7 +440,7 @@ $(document).ready(function () {
                         if (oldtime <= (new Date()).getTime() - delay & oldtime > 0 & elm.attr('keyup') != '' & typeof elm.attr('keyup') !== 'undefined') {
                             // end typing
                             flag_typing = false;
-                            console.log('end typing')
+
                             socket.emit("end_typing", {
                                 "dialog_id": dialog_id,
                                 "user_id": id_real
@@ -408,10 +454,12 @@ $(document).ready(function () {
             })
     }
 
+// while the function for opening the profile is empty
     function set_profile() {
         alert('PROFIIIILE')
     }
 
+// function for clearing the place for new block of content
     function clear_place() {
         if ($('.parent').find('.searcher_dialogs')) {
             $('.searcher_dialogs').remove()
@@ -423,6 +471,7 @@ $(document).ready(function () {
         }
     }
 
+// filling out a chat message
     function fill_chat(dialog) {
         parent_div = $('#block2')
         localStorage.setItem('start', start)
@@ -434,32 +483,43 @@ $(document).ready(function () {
         for (let i = dialog.messages.length - localStorage.getItem('message') + 9; i >= start; i--) {
             if (id_real == dialog.messages[i].user.id) {
                 if (dialog.messages[i].was_read == 1) {
-                    parent_div.prepend(`<div class="chat_messages_2" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><div class="message_time_2">` + dialog.messages[i].time + `</div><div class="clear-line"></div>`)
+                    parent_div.prepend(`<div class="chat_messages_2" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><div class="message_time_2">` + dialog.messages[i].datetime_send.split(" ")[1].split(":").slice(0, 2).join(":") + `</div><div class="clear-line"></div>`)
                 } else {
                     unread.push(dialog.messages[i])
-                    parent_div.prepend(`<div class="chat_messages_2 not_read" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><div class="message_time_2">` + dialog.messages[i].time + `</div><div class="clear-line"></div>`)
+                    parent_div.prepend(`<div class="chat_messages_2 not_read" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><div class="message_time_2">` + dialog.messages[i].datetime_send.split(" ")[1].split(":").slice(0, 2).join(":") + `</div><div class="clear-line"></div>`)
                 }
             } else {
 
                 if (dialog.messages[i].was_read == 1) {
-                    parent_div.prepend(`<div class="chat_messages" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><span class="message_time">` + dialog.messages[i].time + `</span><div class="clear-line"></div>`)
+                    parent_div.prepend(`<div class="chat_messages" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><span class="message_time">` + dialog.messages[i].datetime_send.split(" ")[1].split(":").slice(0, 2).join(":") + `</span><div class="clear-line"></div>`)
 
                 } else {
                     unread.push(dialog.messages[i])
-                    parent_div.prepend(`<div class="chat_messages not_read_recipient" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><span class="message_time">` + dialog.messages[i].time + `</span><div class="clear-line"></div>`)
+                    parent_div.prepend(`<div class="chat_messages not_read_recipient" id="message` + i + `" data-real-msg-id="` + dialog.messages[i].id + `">` + dialog.messages[i].user.name + ` ` + dialog.messages[i].user.surname + `<p>` + dialog.messages[i].text + `</p></div><span class="message_time">` + dialog.messages[i].datetime_send.split(" ")[1].split(":").slice(0, 2).join(":") + `</span><div class="clear-line"></div>`)
                 }
             }
             checking = 0
             if (i - 1 >= 0) {
                 checking = i - 1
             }
-            if (dialog.messages[i].date != dialog.messages[checking].date) {
-                parent_div.prepend(`<div class="message_date_line">` + dialog.messages[i].date + `</div><div class="clear-line"></div>`)
+            // getting dates to compare them
+            date = dialog.messages[i].datetime_send.split(" ")[0].split("-")
+            date.reverse()
+            date = date.join(".")
+            date_previous = dialog.messages[checking].datetime_send.split(" ")[0].split("-")
+            date_previous.reverse()
+            date_previous = date_previous.join(".")
 
 
+            if (date != date_previous) {
+                parent_div.prepend(`<div class="message_date_line">` + date + `</div><div class="clear-line"></div>`)
             }
         }
-        localStorage.setItem('message_last_date', dialog.messages[dialog.messages.length - 1].date)
+
+        date = dialog.messages[dialog.messages.length - 1].datetime_send.split(" ")[0].split("-")
+        date.reverse()
+        date = date.join(".")
+        localStorage.setItem('message_last_date', date)
         $(".send_message").keyup(function (event) {
             if (event.keyCode == 13 && $(this).val()) {
                 event.preventDefault();
@@ -473,24 +533,20 @@ $(document).ready(function () {
         });
     }
 
+// checking is target in the visibility area?
     function is_shown(target) {
-        console.log(target)
-        try {
-            var wt = $("#block2").scrollTop();
-            var wh = $("#block2").height();
-            var eh = $(target).outerHeight();
-            var et = $(target).offset().top;
-
-            if (wt + wh >= et && wt + wh - eh * 2 <= et + (wh - eh)) {
-                return true;
-            } else {
-                return false;
-            }
-        } catch (e) {
-
+        var wt = $("#block2").scrollTop();
+        var wh = $("#block2").height();
+        var eh = $(target).outerHeight();
+        var et = $(target).offset().top;
+        if (et >= wt && et + eh <= wh + wt) {
+            return true;
+        } else {
+            return false;
         }
     }
 
+// declaring functions global
     window.fill_chat = fill_chat;
     window.clear_place = clear_place;
     window.set_chat = set_chat;
